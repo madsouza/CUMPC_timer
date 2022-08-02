@@ -41,7 +41,7 @@ class Demo1:
         self.button1.pack()
 
     def new_window(self):
-        # opens second window
+        # opens second window with timer
         self.newWindow = tk.Toplevel(self.master)
         self.master.wm_state('iconic')
         self.app = Demo2(self.newWindow, float(self.entry_yellow.get()), float(self.entry_red.get()))
@@ -57,6 +57,7 @@ class Demo2:
         # self.master.update()
         # self.master.attributes('-topmost', False)
         self.frame = tk.Frame(self.master)
+        # convert yellow light in minutes to seconds
         self.yellow_light_start = yellow_light*60
         print(self.yellow_light_start)
         self.red_light_start = red_light*60
@@ -79,11 +80,15 @@ class Demo2:
         self.labelDir_time.pack(side="left")
         self.frame.pack()
 
+        # shift q can quit
         keyboard.add_hotkey('shift+q', lambda: self.master.overrideredirect(0))
+        # shift w hide top bar
         keyboard.add_hotkey('shift+w', lambda: self.master.overrideredirect(1))
+        # shift s start
         keyboard.add_hotkey('shift+s', self.start_timer)
 
     def change_color(self):
+        # change color is more like flash
         self.current_color = self.labelDir_time.cget("background")
         self.next_color = "grey"
         self.labelDir_time.config(background=self.next_color)
@@ -94,9 +99,9 @@ class Demo2:
         self.change_color()
         time.sleep(self.yellow_light_start)
         self.labelDir_time.config(background='yellow')
-        time.sleep(30)
+        time.sleep(self.red_light_start - self.yellow_light_start - 30)
         self.change_color()
-        time.sleep(self.red_light_start- self.yellow_light_start - 30)
+        time.sleep(30)
         self.labelDir_time.config(background='red')
 
         # self.master.after(int(self.yellow_light_start), lambda: self.labelDir_time.config(background='yellow'))
