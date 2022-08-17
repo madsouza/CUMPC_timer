@@ -49,41 +49,54 @@ class Demo1:
 
 
 class Demo2:
-    def __init__(self, master, yellow_light, flash_yellow_light, flash_yellow_red, flash_red_light, red_light):
+    def __init__(self, master, yellow_light, red_light, grey_light):
         self.master = master
         self.stop = 0
         self.master.overrideredirect(1)
-        self.master.wm_geometry('200x100-50+25')
+        self.master.wm_geometry('125x75-50+25')
         # keep it on top of other windows always
         self.master.attributes('-topmost', 'True')
         # self.master.update()
         # self.master.attributes('-topmost', False)
         self.frame = tk.Frame(self.master)
+        self.timer_frame = tk.Frame(self.master)
+
         # convert yellow light in minutes to seconds
         self.yellow_light_start = yellow_light*60
-        self.flash_yellow_light = flash_yellow_light*60
+        self.red_light_start = red_light * 60
+        self.grey_light_start = grey_light * 60
+
         print(self.yellow_light_start)
         self.red_light_start = red_light*60
-        self.flash_yellow_red = flash_yellow_red*60
-        self.flash_red_light = flash_red_light*60
-        self.size = 150, 150
+
+        self.size = 100, 100
         self.logo_loc = Image.open("logo.png")
         self_logo_loc = self.logo_loc.thumbnail(self.size, Image.ANTIALIAS)
         self.logo = ImageTk.PhotoImage(self.logo_loc)
 
         self.logo_label = tk.Label(self.frame, image=self.logo,)
         # self.master.bind("<KeyRelease-a>", self.key_press)
-        self.logo_label.pack(side="left")
+        self.logo_label.pack(side="top")
 
         #self.quitButton = tk.Button(self.frame, text='Quit', command = self.close_windows)
         #self.quitButton.pack(side="left")
 
-        self.time_frame = tk.Frame(self.frame)
         self.label_time = tk.StringVar()
         self.label_time.set("")
-        self.labelDir_time = tk.Label(self.frame, textvariable=self.label_time, bg='green', height=200, width=50)
+        self.labelDir_time = tk.Label(self.timer_frame, textvariable=self.label_time, bg='green', height=20, width=10)
         self.labelDir_time.pack(side="left")
-        self.frame.pack()
+
+        self.timer_text = tk.StringVar()
+        self.timer = tk.Label(self.frame, textvariable=self.timer_text)
+        self.timer.pack(side='bottom')
+
+
+        self.frame.pack(side='left')
+        self.timer_frame.pack(side='left')
+        self.timer_text.set('0:00')
+
+
+
 
         # shift q can quit
         keyboard.add_hotkey('shift+q', lambda: self.master.overrideredirect(0))
@@ -99,12 +112,18 @@ class Demo2:
         self.next_color = bg
         start = time.time()
         while start + 1 > time.time():
+            # self.time_elapsed = round(time.time()-self.start_time)
+            # minutes, seconds = divmod(self.time_elapsed, 60)
+            # self.timer_text.set("{:0>1}:{:02.0f}".format(int(minutes), seconds))
             if keyboard.is_pressed('shift+d'):
                 time.sleep(0.2)
                 self.stop = 1
                 break
         self.labelDir_time.config(background=self.next_color)
         while start + 2 > time.time():
+            # self.time_elapsed = round(time.time()-self.start_time)
+            # minutes, seconds = divmod(self.time_elapsed, 60)
+            # self.timer_text.set("{:0>1}:{:02.0f}".format(int(minutes), seconds))
             if keyboard.is_pressed('shift+d'):
                 time.sleep(0.2)
                 self.stop = 1
@@ -113,6 +132,8 @@ class Demo2:
         # self.master.after(1000, lambda: self.labelDir_time.config(background=self.current_color))
 
     def start_timer(self):
+        self.timer_text.set('0:00')
+
         self.stop = 0
         # self.labelDir_time.config(background='green')
         # self.change_color()
@@ -124,27 +145,27 @@ class Demo2:
         # self.labelDir_time.config(background='red')
         self.labelDir_time.config(background='green')
         self.change_color('grey')
+        self.start_time = time.time()
 
         # turn light yellow
-        start_time = time.time()
+
         while True:
             time.sleep(0.2)
+            self.time_elapsed = round(time.time()-self.start_time)
+            minutes, seconds = divmod(self.time_elapsed, 60)
+            self.timer_text.set("{:0>1}:{:02.0f}".format(int(minutes), seconds))
+            # print("{:0>1}:{:05.2f}".format(int(minutes), seconds))
             # print(start_time + self.yellow_light_start < time.time())
             if self.stop == 1:
                 self.change_color('blue')
                 break
-            if start_time + self.yellow_light_start < time.time() <= start_time + self.flash_yellow_light:
+            if self.start_time + self.yellow_light_start < time.time() <= self.start_time + self.red_light_start:
                 self.labelDir_time.config(background='yellow')
-            elif start_time + self.flash_yellow_light < time.time() <= start_time + self.flash_yellow_red:
-                self.change_color('grey')
-                # self.labelDir_time.config(background='yellow')
-            elif start_time + self.flash_yellow_red < time.time() <= start_time + self.flash_red_light:
-                self.change_color('red')
-                # self.labelDir_time.config(background='yellow')
-            elif start_time + self.flash_red_light < time.time() <= start_time + self.red_light_start:
+            elif self.start_time + self.red_light_start < time.time() <= self.start_time + self.grey_light_start:
                 self.labelDir_time.config(background='red')
-                self.change_color('grey')
-            elif start_time + self.red_light_start<= time.time():
+
+            elif self.start_time + self.grey_light_start <= time.time():
+                self.labelDir_time.config(background='grey')
                 # self.labelDir_time.config(background='red')
                 break
             if keyboard.is_pressed('shift+d'):
@@ -222,7 +243,7 @@ class Demo2:
 
 def main():
     root = tk.Tk()
-    app = Demo2(root, 0.5, 1, 1.5, 2, 2.5)
+    app = Demo2(root, 0.5, 1, 1.5)
     root.mainloop()
 
 if __name__ == '__main__':
